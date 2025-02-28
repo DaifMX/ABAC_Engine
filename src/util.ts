@@ -1,0 +1,1 @@
+export const  getTimezoneOffsetParsed = () => new Date().getTimezoneOffset() * 60 * 1000;
