@@ -4,7 +4,7 @@ import { policyContext } from "./data";
 const abacInstance = ABACEngine;
 
 (async () => {
-    console.log('\n=====Entry Point====');
+    console.log('\n****STARTING ABAC ENGINE****\n');
     const result = await abacInstance.evaluatePolicy(policyContext);
-    console.log(result);
+    console.log('\nIs context valid --->', result);
 })();

@@ -1,19 +1,16 @@
-type PathsToStringProps<T, Prefix extends string = ''> = T extends object
+// TypeScript attribute transformer --->
+export type PathsToStringProps<T, Prefix extends string = ''> = T extends object
   ? {
-      [K in keyof T]-?: T[K] extends any[]
-        ? `${Prefix}${K & string}`
-        : T[K] extends object
-        ? PathsToStringProps<T[K], `${Prefix}${K & string}.`>
-        : `${Prefix}${K & string}`;
-    }[keyof T]
+    [K in keyof T]-?: T[K] extends any[]
+    ? `${Prefix}${K & string}`
+    : T[K] extends object
+    ? PathsToStringProps<T[K], `${Prefix}${K & string}.`>
+    : `${Prefix}${K & string}`;
+  }[keyof T]
   : never;
 
-type PolicyContextPath = PathsToStringProps<PolicyContextAttributes>;
-
-// Operaciones CRUD posibles
-type operation = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
-
-// Objeto de contexto que se tiene que generar para comparar los diferentes tipos de datos
+// ==== PolicyContext ==== \\
+// Main
 export type PolicyContext = {
   user: {
     uuid: string;
@@ -24,7 +21,8 @@ export type PolicyContext = {
   resource: {
     type: string;
     authorUuid: string;
-    departments: number[];
+    roles?: string[];
+    departments?: number[];
     whitelist?: string[];
   };
   environment: {
@@ -36,9 +34,14 @@ export type PolicyContext = {
   };
 };
 
-type PolicyContextAttributes = Omit<PolicyContext, 'operation'>;
+// Helpers
+type operation = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'; // CRUD ops.
 
-// Interfaz de la politica 
+type PolicyContextAttributes = Omit<PolicyContext, 'operation'>;
+type PolicyContextPath = PathsToStringProps<PolicyContextAttributes>;
+
+// ===== DB/FS Related ==== \\
+// PolicyModel Interface
 export interface IPolicy {
   uuid: string;
   operation: operation;
@@ -48,11 +51,13 @@ export interface IPolicy {
     [K in PolicyContextPath]?: IAttributes;
   };
   inverted?: boolean;
-}
+};
 
+// Policy Attribute Structure
 interface IAttributes {
   operator: AttributeOperator;
   value: any;
-}
+};
 
+// Posible operations
 type AttributeOperator = 'EQ' | 'NEQ' | 'GT' | 'GTE' | 'LT' | 'LTE' | 'BETWEEN' | 'IN';
