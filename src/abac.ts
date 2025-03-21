@@ -1,8 +1,8 @@
-import { PolicyContext, IPolicy } from './types'
-import { policiesArray} from './data';
+import { PolicyContext, IPolicy } from './types';
+import { policiesArray } from './data';
 
-export class ABACEngine {
-    public static async evaluatePolicy(context: PolicyContext): Promise<boolean> {
+export default class ABACEngine {
+    public static evaluatePolicy(context: PolicyContext): boolean {
         for (const policy of policiesArray) {
             if (this.matchesPolicy(policy, context)) return policy.inverted === false;
         }
@@ -10,18 +10,18 @@ export class ABACEngine {
         return false;
     };
 
-    private static matchesPolicy(policy: IPolicy, context: PolicyContext): boolean {
+    private static matchesPolicy(policy: IPolicy, context: PolicyContext): boolean | undefined {
         const { attributes } = policy;
         return Object.entries(attributes).every(([key, expectedValue], index) => {
             const [domain, ...path] = key.split('.');
             const actualValue = this.getValueFromContext(context, domain, path.join('.'));
 
             console.log(
-                `\n=====Policy #${index}=====`, 
-                '\nDomain:', domain, 
-                '\nPath:', path, 
-                '\nActual Value:', actualValue, 
-                '\nExpected Policy:', expectedValue
+                `=====Policy #${index}=====
+                Domain: ${domain}
+                Path: ${path}
+                Actual Value: ${actualValue}
+                Expected Policy: ${expectedValue.value}\n`
             );
 
             return this.compareValues(actualValue, expectedValue, context);
@@ -37,7 +37,7 @@ export class ABACEngine {
             case 'environment':
                 return path.split('.').reduce((obj: any, key) => obj?.[key], context.environment);
             default:
-                throw new Error('Invalid context')
+                throw new Error('Invalid context');
         }
     };
 
@@ -58,7 +58,7 @@ export class ABACEngine {
                     return actual.some((e) => expectedValue.includes(e));
                 };
                 default: throw new Error('Invalid operator');
-            }
+            };
         }
         const resolvedExpected = this.resolveDynamicContextValues(expected.value, context);
         return actual === resolvedExpected;
@@ -67,14 +67,14 @@ export class ABACEngine {
     private static resolveDynamicContextValues = (value: any, context: PolicyContext) => {
         if (typeof value === 'string') {
             const parts = value.split('.');
-            if(['user', 'resource', 'environment'].includes(parts[0])){
+            if (['user', 'resource', 'environment'].includes(parts[0])) {
                 const [domain, ...path] = parts;
                 const res = this.getValueFromContext(context, domain, path.join('.'));
 
-                return res 
+                return res;
             }
             return value;
         }
         return value;
-    }
+    };
 }
